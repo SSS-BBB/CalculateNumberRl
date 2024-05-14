@@ -2,13 +2,12 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 import random
-from collections import deque
 
 MAX_TARGET_NUM = 100
 MAX_GIVEN_NUM = 100
 MAX_STEP = 50
 
-class GuessNumEnv(gym.Env):
+class CalculateNumEnv(gym.Env):
 
     metadata = {"render_modes": ["human"], "render_fps": 0}
 
@@ -39,18 +38,15 @@ class GuessNumEnv(gym.Env):
                 self.current_result *= self.given_num
             case 3:
                 self.current_result /= self.given_num
-
-        if (self.display):
-            self.display_game()
         
         self.set_obs()
         self.set_reward()
         self.check_done()
 
         info = { 
-                    "num_state": self.num_state,
-                    "last_guesses": list(self.last_guesses),
-                    "last_states": list(self.last_states)
+                    "target_num": self.target_num,
+                    "given_num": self.given_num,
+                    "current_result": self.current_result
                }
 
         return self.observation, self.reward, self.done, self.truncated, info
@@ -73,10 +69,17 @@ class GuessNumEnv(gym.Env):
         self.observation = np.array([self.target_num, self.given_num, self.current_result])
 
     def set_reward(self):
-        pass
+        divider = abs(self.target_num - self.current_result)
+        self.reward = -0.2 + 1/divider
+
+        if (abs(self.current_result - self.target_num) < 0.01):
+            self.reward = 100
 
     def display_game(self):
-        pass
+        print("Target Number:", self.target_num)
+        print("Given Number:", self.given_num)
+        print("Result:", self.current_result)
+        print("------------------------------")
 
     def check_done(self):
         self.truncated = False
