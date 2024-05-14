@@ -1,18 +1,22 @@
 import gymnasium as gym
 from calculate_num_env import CalculateNumEnv
+from stable_baselines3 import PPO
 
 env = CalculateNumEnv(display=True)
+
+model_path = "models/PPO/1715687766/170000.zip"
+model = PPO.load(model_path, env=env)
 
 episodes = 1
 
 for episode in range(episodes):
-    env.reset()
+    obs, info = env.reset()
     done = False
     
-    while True:
-        action = int(input("Choose an operation: "))
+    while not done:
+        action, _ = model.predict(obs)
         obs, reward, done, _, info = env.step(action)
         print(reward)
-        print("------------------------")
-        if done:
-            break
+        # input("Press any key to continue")
+
+env.close()

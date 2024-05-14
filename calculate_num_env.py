@@ -23,6 +23,7 @@ class CalculateNumEnv(gym.Env):
 
     def step(self, action):
         self.current_step += 1
+        self.last_result = self.current_result
         # actions: 0 -> +,
         #          1 -> -,
         #          2 -> *,
@@ -32,36 +33,44 @@ class CalculateNumEnv(gym.Env):
         match(action):
             case 0:
                 self.current_result += self.given_num
+                self.sign = "+"
                 if (self.display):
                     print("Choose +")
             case 1:
                 self.current_result -= self.given_num
+                self.sign = "-"
                 if (self.display):
                     print("Choose -")
             case 2:
                 self.current_result *= self.given_num
+                self.sign = "*"
                 if (self.display):
                     print("Choose *")
             case 3:
                 self.current_result /= self.given_num
+                self.sign = "/"
                 if (self.display):
                     print("Choose /")
             case 4:
                 self.give_up = True
                 if (self.display):
                     print("Choose give up")
+        if (not self.give_up):
+            self.history.append(f"{self.last_result} {self.sign} {self.given_num} = {self.current_result}")
         
-        self.set_obs()
         self.set_reward()
         self.check_done()
 
         self.given_num = random.randint(1, MAX_GIVEN_NUM)
+        self.set_obs()
+
         self.display_game()
 
         info = { 
                     "target_num": self.target_num,
                     "given_num": self.given_num,
-                    "current_result": self.current_result
+                    "current_result": self.current_result,
+                    "history": self.history
                }
 
         return self.observation, self.reward, self.done, self.truncated, info
@@ -75,6 +84,8 @@ class CalculateNumEnv(gym.Env):
         self.truncated = False
         self.current_step = 0
         self.give_up = False
+        self.history = []
+        self.sign = ""
 
         self.set_obs()
         info = {}
@@ -101,11 +112,21 @@ class CalculateNumEnv(gym.Env):
         self.reward = float(self.reward)
 
     def display_game(self):
-        if (self.display and not self.give_up):
-            print("Target Number:", self.target_num)
-            print("Given Number:", self.given_num)
-            print("Result:", self.current_result)
-            print("------------------------------")
+        if (self.display):
+            if (not self.give_up):
+                print("Target Number:", self.target_num)
+                print("Given Number:", self.given_num)
+                print("Result:", self.current_result)
+                print("History:")
+                for h in self.history:
+                    print(h)
+                print("------------------------------")
+
+            if (self.done):
+                print("------------------------------")
+                print(f"Target number: {self.target_num}")
+                print(f"Last result: {self.current_result}")
+                print("------------------------------")
 
     def check_done(self):
         self.truncated = False
