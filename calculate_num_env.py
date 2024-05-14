@@ -16,32 +16,47 @@ class CalculateNumEnv(gym.Env):
 
         self.display = display
 
-        self.action_space = spaces.Discrete(4) # +, -, *, /
+        self.action_space = spaces.Discrete(5) # +, -, *, /, give up
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
                                             shape=(3, ), dtype=np.int64)
 
     def step(self, action):
-        if (self.display):
-            self.display_game()
         self.current_step += 1
         # actions: 0 -> +,
         #          1 -> -,
         #          2 -> *,
         #          3 -> /,
+        #          4 -> give up,
+       
         match(action):
             case 0:
                 self.current_result += self.given_num
+                if (self.display):
+                    print("Choose +")
             case 1:
                 self.current_result -= self.given_num
+                if (self.display):
+                    print("Choose -")
             case 2:
                 self.current_result *= self.given_num
+                if (self.display):
+                    print("Choose *")
             case 3:
                 self.current_result /= self.given_num
+                if (self.display):
+                    print("Choose /")
+            case 4:
+                self.give_up = True
+                if (self.display):
+                    print("Choose give up")
         
         self.set_obs()
         self.set_reward()
         self.check_done()
+
+        self.given_num = random.randint(1, MAX_GIVEN_NUM)
+        self.display_game()
 
         info = { 
                     "target_num": self.target_num,
@@ -54,14 +69,17 @@ class CalculateNumEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self.target_num = random.randint(1, MAX_TARGET_NUM)
         self.given_num = random.randint(1, MAX_GIVEN_NUM)
-        self.current_result = self.given_num
+        self.current_result = random.randint(1, MAX_GIVEN_NUM)
         self.reward = 0
         self.done = False
         self.truncated = False
         self.current_step = 0
+        self.give_up = False
 
         self.set_obs()
         info = {}
+
+        self.display_game()
 
         return self.observation, info
     
@@ -69,21 +87,29 @@ class CalculateNumEnv(gym.Env):
         self.observation = np.array([self.target_num, self.given_num, self.current_result])
 
     def set_reward(self):
-        divider = abs(self.target_num - self.current_result)
-        self.reward = -0.2 + 1/divider
-
         if (abs(self.current_result - self.target_num) < 0.01):
-            self.reward = 100
+                self.reward = 100
+                return
+
+        if (not self.give_up):
+            divider = abs(self.target_num - self.current_result)
+            self.reward = -0.1 + 1/divider
+        else:
+            divider = abs(self.target_num - self.current_result) / 10
+            self.reward = -3.3 + 1/divider
+
+        self.reward = float(self.reward)
 
     def display_game(self):
-        print("Target Number:", self.target_num)
-        print("Given Number:", self.given_num)
-        print("Result:", self.current_result)
-        print("------------------------------")
+        if (self.display and not self.give_up):
+            print("Target Number:", self.target_num)
+            print("Given Number:", self.given_num)
+            print("Result:", self.current_result)
+            print("------------------------------")
 
     def check_done(self):
         self.truncated = False
-        if (abs(self.current_result - self.target_num) < 0.01):
+        if (abs(self.current_result - self.target_num) < 0.01 or self.give_up):
             self.done = True
         else:
             if (self.current_step > MAX_STEP):
