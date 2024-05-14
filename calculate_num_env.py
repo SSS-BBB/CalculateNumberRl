@@ -35,26 +35,26 @@ class CalculateNumEnv(gym.Env):
                 self.current_result += self.given_num
                 self.sign = "+"
                 if (self.display):
-                    print("Choose +")
+                    pass
             case 1:
                 self.current_result -= self.given_num
                 self.sign = "-"
                 if (self.display):
-                    print("Choose -")
+                    pass
             case 2:
                 self.current_result *= self.given_num
                 self.sign = "*"
                 if (self.display):
-                    print("Choose *")
+                    pass
             case 3:
                 self.current_result /= self.given_num
                 self.sign = "/"
                 if (self.display):
-                    print("Choose /")
+                    pass
             case 4:
                 self.give_up = True
                 if (self.display):
-                    print("Choose give up")
+                    pass
         if (not self.give_up):
             self.history.append(f"{self.last_result} {self.sign} {self.given_num} = {self.current_result}")
         
@@ -114,18 +114,27 @@ class CalculateNumEnv(gym.Env):
     def display_game(self):
         if (self.display):
             if (not self.give_up):
+                
+                if (len(self.history) > 0):
+                    print(self.history[-1])
                 print("Target Number:", self.target_num)
-                print("Given Number:", self.given_num)
                 print("Result:", self.current_result)
-                print("History:")
-                for h in self.history:
-                    print(h)
+                print("Given Number:", self.given_num)
+                # print("History:")
+                # for h in self.history:
+                #     print(h)
                 print("------------------------------")
 
             if (self.done):
                 print("------------------------------")
+                # print("History:")
+                # for h in self.history:
+                #     print(h)
+                if (self.give_up):
+                    print("Choose give up")
                 print(f"Target number: {self.target_num}")
                 print(f"Last result: {self.current_result}")
+                print(f"Difference: {abs(self.target_num - self.current_result)}")
                 print("------------------------------")
 
     def check_done(self):
